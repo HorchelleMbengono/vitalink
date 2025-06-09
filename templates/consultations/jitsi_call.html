@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Téléconsultation{% endblock %}
+
+{% block content %}
+<h2>Téléconsultation en cours</h2>
+<div id="meet" style="height: 600px; width: 100%;"></div>
+
+<script src='https://meet.jit.si/external_api.js'></script>
+<script>
+  const domain = 'meet.jit.si';
+  const options = {
+      roomName: '{{ room_name }}',
+      width: '100%',
+      height: 600,
+      parentNode: document.querySelector('#meet'),
+      interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+      }
+  };
+  const api = new JitsiMeetExternalAPI(domain, options);
+</script>
+{% endblock %}

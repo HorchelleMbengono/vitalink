@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Mon tableau de bord{% endblock %}
+
+{% block content %}
+<h2>Mes rendez-vous</h2>
+<a href="{% url 'prendre_rendezvous' %}" class="btn btn-primary mb-3">Prendre un nouveau rendez-vous</a>
+<ul class="list-group">
+  {% for rdv in rdvs %}
+    <li class="list-group-item">
+      <strong>Avec : </strong> Dr. {{ rdv.médecin.get_full_name }} <br>
+      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
+      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success mt-2">Rejoindre la téléconsultation</a>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Aucun rendez-vous prévu.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

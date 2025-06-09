@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord Médecin{% endblock %}
+
+{% block content %}
+
+<h2>📅 Consultations à venir (en tant que médecin)</h2>
+<ul class="list-group mb-5">
+  {% for rdv in consultations_donnees %}
+    <li class="list-group-item">
+      <strong>Patient : </strong> {{ rdv.patient.get_full_name|default:rdv.patient.username }}<br>
+      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
+      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success mt-2">Démarrer la consultation</a>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Aucune consultation prévue.</li>
+  {% endfor %}
+</ul>
+
+<h2>📋 Rendez-vous pris (en tant que patient)</h2>
+<ul class="list-group">
+  {% for rdv in rdvs_pris %}
+    <li class="list-group-item">
+      <strong>Avec : </strong> Dr. {{ rdv.médecin.get_full_name|default:rdv.médecin.username }}<br>
+      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
+      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-primary mt-2">Rejoindre la téléconsultation</a>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Aucun rendez-vous pris.</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

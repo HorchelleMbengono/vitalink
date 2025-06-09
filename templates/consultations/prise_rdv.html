@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load form_tags %}  {# utile si tu veux utiliser add_class pour les champs #}
+
+{% block title %}Prise de rendez-vous{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4">Planifier un rendez-vous</h2>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field|add_class:"form-control" }}
+                {% if field.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in field.errors %}
+                            <small>{{ error }}</small><br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Valider</button>
+    </form>
+</div>
+{% endblock %}
