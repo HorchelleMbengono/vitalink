@@ -2,31 +2,99 @@
 {% block title %}Tableau de bord Médecin{% endblock %}
 
 {% block content %}
+  <style>
+    .nav-tabs .nav-link {
+      color: #000 !important; /* couleur noire par défaut */
+    }
 
-<h2>📅 Consultations à venir (en tant que médecin)</h2>
-<ul class="list-group mb-5">
-  {% for rdv in consultations_donnees %}
-    <li class="list-group-item">
-      <strong>Patient : </strong> {{ rdv.patient.get_full_name|default:rdv.patient.username }}<br>
-      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
-      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success mt-2">Démarrer la consultation</a>
+    .nav-tabs .nav-link.active {
+      background-color: #f8f9fa; /* fond clair pour onglet actif */
+      border-color: #dee2e6 #dee2e6 #fff; /* pour fond et bordure propre */
+      color: #000 !important; /* texte noir même si actif */
+    }
+  </style>
+
+<div class="container mt-4">
+
+  <ul class="nav nav-tabs" id="medecinTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="consultations-tab" data-bs-toggle="tab" data-bs-target="#consultations" type="button" role="tab">
+        📅 Consultations
+      </button>
     </li>
-  {% empty %}
-    <li class="list-group-item">Aucune consultation prévue.</li>
-  {% endfor %}
-</ul>
-
-<h2>📋 Rendez-vous pris (en tant que patient)</h2>
-<ul class="list-group">
-  {% for rdv in rdvs_pris %}
-    <li class="list-group-item">
-      <strong>Avec : </strong> Dr. {{ rdv.médecin.get_full_name|default:rdv.médecin.username }}<br>
-      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
-      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-primary mt-2">Rejoindre la téléconsultation</a>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="rdv-tab" data-bs-toggle="tab" data-bs-target="#rdv" type="button" role="tab">
+        📋 Rendez-vous pris
+      </button>
     </li>
-  {% empty %}
-    <li class="list-group-item">Aucun rendez-vous pris.</li>
-  {% endfor %}
-</ul>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab">
+        👨‍⚕️ Mes patients
+      </button>
+    </li>
+  </ul>
 
+  <div class="tab-content mt-3" id="medecinTabContent">
+
+    <!-- Consultations à venir -->
+    <div class="tab-pane fade show active" id="consultations" role="tabpanel">
+      <ul class="list-group">
+        {% for rdv in consultations_donnees %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Patient :</strong> {{ rdv.patient.get_full_name|default:rdv.patient.username }}<br>
+                <small><strong>Date :</strong> {{ rdv.date|date:"d/m/Y H:i" }}</small>
+              </div>
+              <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success btn-sm">Démarrer</a>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item">Aucune consultation prévue.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Rendez-vous pris -->
+    <div class="tab-pane fade" id="rdv" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5>Rendez-vous en tant que patient</h5>
+        <a href="{% url 'prendre_rendezvous' %}" class="btn btn-primary btn-sm">Nouveau rendez-vous</a>
+      </div>
+      <ul class="list-group">
+        {% for rdv in rdvs_pris %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Médecin :</strong> Dr. {{ rdv.médecin.get_full_name|default:rdv.médecin.username }}<br>
+                <small><strong>Date :</strong> {{ rdv.date|date:"d/m/Y H:i" }}</small>
+              </div>
+              <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-primary btn-sm">Rejoindre</a>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item">Aucun rendez-vous pris.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Liste des patients -->
+    <div class="tab-pane fade" id="patients" role="tabpanel">
+      <ul class="list-group">
+        {% for patient in patients %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ patient.get_full_name|default:patient.username }}</strong><br>
+              <small>{{ patient.email }}</small>
+            </div>
+            <a href="{% url 'voir_dossier' patient.id %}" class="btn btn-outline-primary btn-sm">Voir le dossier</a>
+          </li>
+        {% empty %}
+          <li class="list-group-item">Aucun patient consulté pour le moment.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+</div>
 {% endblock %}

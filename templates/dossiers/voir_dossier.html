@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Dossier Médical de {{ dossier.patient.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary">📁 Dossier Médical de {{ dossier.patient.get_full_name }}</h2>
+    <a href="{% url 'ajouter_entree' dossier.patient.id %}" class="btn btn-success">
+      ➕ Ajouter une entrée
+    </a>
+  </div>
+
+  {% if dossier.entrees.all %}
+    {% for entree in dossier.entrees.all %}
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>{{ entree.titre }}</strong> — 
+          <span class="text-muted">{{ entree.date|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="card-body">
+          <p>{{ entree.description }}</p>
+
+          {% if entree.fichier %}
+            <a href="{{ entree.fichier.url }}" class="btn btn-outline-secondary btn-sm mb-2" target="_blank">
+              📄 Voir le document
+            </a><br>
+          {% endif %}
+
+          <small class="text-muted">
+            Rédigé par : {{ entree.auteur.get_full_name|default:entree.auteur.username }}
+          </small>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">
+      Aucune entrée dans ce dossier médical.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -2,6 +2,8 @@ import uuid
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 
+from accounts.models import CustomUser
+
 from .forms import RendezVousForm
 from .models import RendezVous
 
@@ -16,8 +18,8 @@ def prendre_rendezvous(request):
         form = RendezVousForm(request.POST)
         if form.is_valid():
             rdv = form.save(commit=False)
-            rdv.patient = request.user  # ➕ patient automatiquement
-            rdv.room_name = str(uuid.uuid4())  # 🔒 room Jitsi
+            rdv.patient = request.user
+            rdv.room_name = str(uuid.uuid4())
             rdv.save()
             return redirect('dashboard_patient')
     else:
@@ -25,24 +27,27 @@ def prendre_rendezvous(request):
     return render(request, 'consultations/prise_rdv.html', {'form': form})
 
 
+
 @login_required
 def dashboard_patient(request):
     rdvs = RendezVous.objects.filter(patient=request.user).order_by('-date')
     return render(request, 'dashboard/patient.html', {'rdvs': rdvs})
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from consultations.models import RendezVous
 
 @login_required
 def dashboard_medecin(request):
     user = request.user
-    consultations_donnees = RendezVous.objects.filter(médecin=user)
-    rdvs_pris = RendezVous.objects.filter(patient=user)
+    consultations_donnees = RendezVous.objects.filter(médecin=user).order_by('-date')
+    rdvs_pris = RendezVous.objects.filter(patient=user).order_by('-date')
+
+    # Récupérer tous les patients avec lesquels le médecin a eu/va avoir une consultation
+    patients_ids = consultations_donnees.values_list('patient__id', flat=True).distinct()
+    patients = CustomUser.objects.filter(id__in=patients_ids, role='patient')
 
     return render(request, 'dashboard/medecin.html', {
         'consultations_donnees': consultations_donnees,
         'rdvs_pris': rdvs_pris,
+        'patients': patients,
     })
 
 # Create your views here.

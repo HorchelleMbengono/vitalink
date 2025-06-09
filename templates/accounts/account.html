@@ -5,8 +5,12 @@
     <h3>Informations du compte</h3>
     <p><strong>Nom :</strong> {{ user.first_name }} {{ user.last_name }}</p>
     <p><strong>Email :</strong> {{ user.email }}</p>
-    <p> <strong>Rôle :</strong> {{ user.role }}</p>
+    <p><strong>Rôle :</strong> {{ user.role }}</p>
+    <p><strong>Téléphone :</strong> {{ user.telephone }}</p>
     <a href="{% url 'edit_account' %}" class="btn btn-outline-primary">Modifier les informations</a>
 
+    {% if user.role == 'patient' %}
+    <a href="{% url 'voir_dossier' user.id %}" class="btn btn-primary mt-3">Voir mon dossier médical</a>
+    {% endif %}
 </div>
 {% endblock %}

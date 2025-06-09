@@ -1,9 +1,14 @@
-from django.shortcuts import render, redirect
+from django.dispatch import receiver
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, EditAccountForm
+
+from .models import CustomUser, DossierMedical
+from .forms import CustomUserCreationForm, EditAccountForm, EntreeDossierForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.db.models.signals import post_save
 #import requests
 
 @login_required
@@ -24,7 +29,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect_by_role(user)
+            return redirect_by_role(request)
     else:
         form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -63,6 +68,45 @@ def edit_account_view(request):
         form = EditAccountForm(instance=request.user)
     return render(request, 'accounts/edit_account.html', {'form': form})
 
+
+@login_required
+def voir_dossier(request, patient_id):
+    # Autoriser si médecin
+    if request.user.role == 'medecin':
+        dossier = get_object_or_404(DossierMedical, patient__id=patient_id)
+    # Ou si l'utilisateur est patient ET consulte son propre dossier
+    elif request.user.role == 'patient' and request.user.id == patient_id:
+        dossier = get_object_or_404(DossierMedical, patient=request.user)
+    else:
+        return HttpResponseForbidden("Accès interdit.")
+    
+    return render(request, 'dossiers/voir_dossier.html', {'dossier': dossier})
+
+
+@login_required
+def ajouter_entree(request, patient_id):
+    # Autoriser uniquement les médecins à ajouter une entrée
+    if request.user.role != 'medecin':
+        return HttpResponseForbidden("Accès interdit. Réservé aux médecins.")
+    
+    patient = get_object_or_404(CustomUser, id=patient_id, role='patient')
+    dossier = patient.dossier
+
+    if request.method == 'POST':
+        form = EntreeDossierForm(request.POST, request.FILES)
+        if form.is_valid():
+            entree = form.save(commit=False)
+            entree.dossier = dossier
+            entree.auteur = request.user  # médecin connecté
+            entree.save()
+            return redirect('voir_dossier', patient_id=patient.id)
+    else:
+        form = EntreeDossierForm()
+
+    return render(request, 'dossiers/ajouter_entree.html', {'form': form, 'patient': patient})
+
+
+
 """@login_required
 def change_password_view(request):
     if request.method == 'POST':
@@ -87,3 +131,4 @@ def change_password_view(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'accounts/change_password.html', {'form': form})"""
+

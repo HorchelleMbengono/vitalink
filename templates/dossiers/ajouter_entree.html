@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter une entrée au dossier de {{ patient.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">➕ Ajouter une entrée au dossier médical de {{ patient.get_full_name }}</h2>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="id_titre" class="form-label">Titre</label>
+      {{ form.titre }}
+      {% if form.titre.errors %}
+        <div class="text-danger small">{{ form.titre.errors }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_description" class="form-label">Description</label>
+      {{ form.description }}
+      {% if form.description.errors %}
+        <div class="text-danger small">{{ form.description.errors }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_fichier" class="form-label">Fichier (optionnel)</label>
+      {{ form.fichier }}
+      {% if form.fichier.errors %}
+        <div class="text-danger small">{{ form.fichier.errors }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Ajouter l'entrée</button>
+    <a href="{% url 'voir_dossier' patient.id %}" class="btn btn-secondary ms-2">Retour au dossier</a>
+  </form>
+</div>
+{% endblock %}
