@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import account_view, ajouter_entree, edit_account_view, redirect_by_role, register_view, login_view, logout_view, voir_dossier
+from .views import account_view, ajouter_entree, edit_account_view, modifier_ordonnance, redirect_by_role, register_view, login_view, logout_view, voir_dossier
 
 urlpatterns = [
     path('register/', register_view, name='register'),
@@ -12,4 +12,6 @@ urlpatterns = [
 
     path('dossier/<int:patient_id>/', voir_dossier, name='voir_dossier'),
     path('dossier/<int:patient_id>/ajouter/', ajouter_entree, name='ajouter_entree'),
+    path('dossier/ordonnance/<int:ordonnance_id>/modifier/', modifier_ordonnance, name='modifier_ordonnance'),
+
 ]

@@ -1,11 +1,14 @@
 import uuid
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 
-from accounts.models import CustomUser
+from accounts.models import CustomUser, DossierMedical
 
+from weasyprint import HTML
+from django.template.loader import render_to_string
 from .forms import RendezVousForm
-from .models import RendezVous
+from .models import Ordonnance, RendezVous
 
 
 @login_required
@@ -50,4 +53,25 @@ def dashboard_medecin(request):
         'patients': patients,
     })
 
-# Create your views here.
+def export_dossier_pdf(request, patient_id):
+    dossier = DossierMedical.objects.get(patient__id=patient_id)
+    ordonnances = dossier.ordonnance_set.all()
+
+    html_string = render_to_string('pdf/dossier_medical.html', {
+        'dossier': dossier,
+        'ordonnances': ordonnances
+    })
+    pdf = HTML(string=html_string).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Dossier_{dossier.patient.get_full_name()}.pdf"'
+    return response
+
+def export_ordonnance_pdf(request, ordonnance_id):
+    ordonnance = Ordonnance.objects.get(id=ordonnance_id)
+    html_string = render_to_string('pdf/ordonnance.html', {'ordonnance': ordonnance})
+    pdf = HTML(string=html_string).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Ordonnance_{ordonnance.id}.pdf"'
+    return response

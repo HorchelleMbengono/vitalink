@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; }
+    h1 { text-align: center; color: #007bff; }
+    .section { margin-bottom: 30px; }
+    .card { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .titre { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Dossier Médical de {{ dossier.patient.get_full_name }}</h1>
+
+  <div class="section">
+    <h2>Entrées</h2>
+    {% for entree in dossier.entrees.all %}
+      <div class="card">
+        <div class="titre">{{ entree.titre }} — {{ entree.date|date:"d/m/Y H:i" }}</div>
+        <p>{{ entree.description }}</p>
+        <small>Rédigé par : {{ entree.auteur.get_full_name }}</small>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="section">
+    <h2>Ordonnances</h2>
+    {% for ordonnance in ordonnances %}
+      <div class="card">
+        <div class="titre">Ordonnance du {{ ordonnance.date|date:"d/m/Y" }}</div>
+        <p>{{ ordonnance.contenu|linebreaksbr }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

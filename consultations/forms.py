@@ -14,7 +14,13 @@ class RendezVousForm(forms.ModelForm):
         # Filtrer uniquement les utilisateurs ayant le rôle médecin 
         self.fields['médecin'].queryset = CustomUser.objects.filter(role='medecin')
 
+
 class OrdonnanceForm(forms.ModelForm):
     class Meta:
         model = Ordonnance
-        fields = ['consultation', 'contenu', 'fichier']
+        fields = ['contenu', 'fichier']
+        widgets = {
+            'contenu': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Détails de l’ordonnance...'}),
+            'fichier': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+

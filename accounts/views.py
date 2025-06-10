@@ -4,6 +4,9 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
+from consultations.models import Ordonnance
+from consultations.forms import OrdonnanceForm
+
 from .models import CustomUser, DossierMedical
 from .forms import CustomUserCreationForm, EditAccountForm, EntreeDossierForm
 from django.contrib.auth.forms import PasswordChangeForm
@@ -71,17 +74,54 @@ def edit_account_view(request):
 
 @login_required
 def voir_dossier(request, patient_id):
-    # Autoriser si médecin
+    # Vérification des droits d'accès
     if request.user.role == 'medecin':
         dossier = get_object_or_404(DossierMedical, patient__id=patient_id)
-    # Ou si l'utilisateur est patient ET consulte son propre dossier
     elif request.user.role == 'patient' and request.user.id == patient_id:
         dossier = get_object_or_404(DossierMedical, patient=request.user)
     else:
         return HttpResponseForbidden("Accès interdit.")
     
-    return render(request, 'dossiers/voir_dossier.html', {'dossier': dossier})
+    # Liste des ordonnances du patient
+    ordonnances = Ordonnance.objects.filter(patient=dossier.patient).order_by('-date')
 
+    # Gestion du formulaire d'ajout ou modification d'ordonnance
+    # On gère ici l'ajout uniquement (modification dans modal via JS)
+    if request.method == 'POST' and 'ajouter_ordonnance' in request.POST:
+        form = OrdonnanceForm(request.POST, request.FILES)
+        if form.is_valid():
+            ordonnance = form.save(commit=False)
+            ordonnance.patient = dossier.patient
+            ordonnance.auteur = request.user
+            ordonnance.save()
+            return redirect('voir_dossier', patient_id=patient_id)
+    else:
+        form = OrdonnanceForm()
+
+    return render(request, 'dossiers/voir_dossier.html', {
+        'dossier': dossier,
+        'ordonnances': ordonnances,
+        'form': form,
+    })
+
+@login_required
+def modifier_ordonnance(request, ordonnance_id):
+    ordonnance = get_object_or_404(Ordonnance, id=ordonnance_id)
+
+    # Vérification des droits : médecin uniquement (auteur)
+    if request.user.role != 'medecin' or ordonnance.auteur != request.user:
+        return HttpResponseForbidden("Accès interdit.")
+
+    if request.method == 'POST':
+        form = OrdonnanceForm(request.POST, request.FILES, instance=ordonnance)
+        if form.is_valid():
+            form.save()
+            return redirect('voir_dossier', patient_id=ordonnance.patient.id)
+    else:
+        form = OrdonnanceForm(instance=ordonnance)
+
+    # En cas d'accès direct (rare), on peut rediriger vers dossier
+    return redirect('voir_dossier', patient_id=ordonnance.patient.id)
 
 @login_required
 def ajouter_entree(request, patient_id):

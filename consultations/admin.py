@@ -9,5 +9,5 @@ class RendezVousAdmin(admin.ModelAdmin):
 
 @admin.register(Ordonnance)
 class OrdonnanceAdmin(admin.ModelAdmin):
-    list_display = ('consultation', 'date')
-    search_fields = ('consultation__patient__username',)
+    list_display = ('patient', 'auteur', 'date')
+

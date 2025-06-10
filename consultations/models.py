@@ -21,10 +21,31 @@ class RendezVous(models.Model):
     def __str__(self):
         return f"{self.patient.username} avec {self.médecin.username} le {self.date}"
 
+from django.db import models
+from django.conf import settings
+
 class Ordonnance(models.Model):
-    consultation = models.ForeignKey(RendezVous, on_delete=models.CASCADE)
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        limit_choices_to={'role': 'patient'},
+        on_delete=models.CASCADE,
+        related_name='ordonnances_patient',  # <- ici
+        default=''
+    )
+    auteur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        limit_choices_to={'role': 'medecin'},
+        on_delete=models.CASCADE,
+        related_name='ordonnances_auteur',  # <- ici
+        default=''
+    )
     contenu = models.TextField()
     date = models.DateField(auto_now_add=True)
     fichier = models.FileField(upload_to='ordonnances/', blank=True, null=True)
+
+    def __str__(self):
+        return f"Ordonnance du {self.date} pour {self.patient.get_full_name()}"
+
+
 
 

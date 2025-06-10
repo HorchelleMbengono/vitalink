@@ -2,40 +2,141 @@
 {% block title %}Dossier Médical de {{ dossier.patient.get_full_name }}{% endblock %}
 
 {% block content %}
+<style>
+  .nav-tabs .nav-link {
+    color: #000 !important;
+  }
+  .nav-tabs .nav-link.active {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 #dee2e6 #fff;
+    color: #000 !important;
+  }
+</style>
+
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-primary">📁 Dossier Médical de {{ dossier.patient.get_full_name }}</h2>
-    <a href="{% url 'ajouter_entree' dossier.patient.id %}" class="btn btn-success">
-      ➕ Ajouter une entrée
-    </a>
-  </div>
+  <h2 class="mb-4 text-primary">📁 Dossier Médical de {{ dossier.patient.get_full_name }}</h2>
 
-  {% if dossier.entrees.all %}
-    {% for entree in dossier.entrees.all %}
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-light">
-          <strong>{{ entree.titre }}</strong> — 
-          <span class="text-muted">{{ entree.date|date:"d/m/Y H:i" }}</span>
-        </div>
-        <div class="card-body">
-          <p>{{ entree.description }}</p>
+  <!-- Navigation par onglets -->
+  <ul class="nav nav-tabs" id="dossierTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="entrees-tab" data-bs-toggle="tab" data-bs-target="#entrees" type="button" role="tab">
+        📄 Entrées médicales
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="ordonnances-tab" data-bs-toggle="tab" data-bs-target="#ordonnances" type="button" role="tab">
+        💊 Ordonnances
+      </button>
+    </li>
+  </ul>
 
-          {% if entree.fichier %}
-            <a href="{{ entree.fichier.url }}" class="btn btn-outline-secondary btn-sm mb-2" target="_blank">
-              📄 Voir le document
-            </a><br>
-          {% endif %}
+  <div class="tab-content mt-3" id="dossierTabContent">
 
-          <small class="text-muted">
-            Rédigé par : {{ entree.auteur.get_full_name|default:entree.auteur.username }}
-          </small>
-        </div>
+    <!-- Onglet Entrées Médicales -->
+    <div class="tab-pane fade show active" id="entrees" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Historique des entrées</h5>
+        <a href="{% url 'ajouter_entree' dossier.patient.id %}" class="btn btn-success btn-sm">➕ Ajouter une entrée</a>
+        <a href="{% url 'export_dossier_pdf' dossier.patient.id %}" class="btn btn-outline-secondary">
+            🖨️ Exporter le dossier en PDF
+        </a>
+
       </div>
-    {% endfor %}
-  {% else %}
-    <div class="alert alert-info">
-      Aucune entrée dans ce dossier médical.
+
+      {% if dossier.entrees.all %}
+        {% for entree in dossier.entrees.all %}
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+              <strong>{{ entree.titre }}</strong> — 
+              <span class="text-muted">{{ entree.date|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="card-body">
+              <p>{{ entree.description }}</p>
+              {% if entree.fichier %}
+                <a href="{{ entree.fichier.url }}" class="btn btn-outline-secondary btn-sm mb-2" target="_blank">
+                  📄 Voir le document
+                </a><br>
+              {% endif %}
+              <small class="text-muted">Rédigé par : {{ entree.auteur.get_full_name|default:entree.auteur.username }}</small>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="alert alert-info">Aucune entrée dans ce dossier médical.</div>
+      {% endif %}
     </div>
-  {% endif %}
+
+    <!-- Onglet Ordonnances -->
+    <div class="tab-pane fade" id="ordonnances" role="tabpanel">
+
+      <!-- Liste ordonnances -->
+      <ul class="list-group mb-4">
+        {% for ordonnance in ordonnances %}
+          <li class="list-group-item d-flex flex-column">
+            <div>
+              <strong>{{ ordonnance.date }}</strong><br>
+              {{ ordonnance.contenu|linebreaksbr }}
+              {% if ordonnance.fichier %}
+                <br><a href="{{ ordonnance.fichier.url }}" target="_blank">📄 Voir le fichier</a>
+              {% endif %}
+            </div>
+            <a href="{% url 'export_ordonnance_pdf' ordonnance.id %}" class="btn btn-outline-secondary btn-sm mt-1">
+                📄 Exporter en PDF
+            </a>
+
+            <div class="mt-2 text-end">
+              <!-- Bouton pour ouvrir modal de modification -->
+              <button class="btn btn-sm btn-outline-primary" 
+                data-bs-toggle="modal" 
+                data-bs-target="#modifierOrdonnanceModal{{ ordonnance.id }}">
+                ✏️ Modifier
+              </button>
+            </div>
+
+            <!-- Modal de modification ordonnance -->
+            <div class="modal fade" id="modifierOrdonnanceModal{{ ordonnance.id }}" tabindex="-1" aria-labelledby="modalLabel{{ ordonnance.id }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="post" enctype="multipart/form-data" action="{% url 'modifier_ordonnance' ordonnance.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalLabel{{ ordonnance.id }}">Modifier Ordonnance du {{ ordonnance.date }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                      <textarea name="contenu" class="form-control mb-3" rows="5">{{ ordonnance.contenu }}</textarea>
+                      <label for="fichier">Fichier (laisser vide pour ne pas modifier)</label>
+                      <input type="file" name="fichier" class="form-control" />
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Enregistrer</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item">Aucune ordonnance pour le moment.</li>
+        {% endfor %}
+      </ul>
+
+      <!-- Formulaire ajout ordonnance -->
+      <div class="card p-3 shadow-sm" style="background: white; border-radius: 10px;">
+        <h5>Nouvelle ordonnance</h5>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.contenu.label_tag }}
+          {{ form.contenu }}
+          {{ form.fichier.label_tag }}
+          {{ form.fichier }}
+          <input type="hidden" name="ajouter_ordonnance" value="1" />
+          <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { text-align: center; color: #007bff; }
+    .content { border: 1px solid #ccc; padding: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Ordonnance du {{ ordonnance.date|date:"d/m/Y" }}</h1>
+  <div class="content">
+    {{ ordonnance.contenu|linebreaksbr }}
+  </div>
+</body>
+</html>
