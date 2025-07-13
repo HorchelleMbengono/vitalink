@@ -11,3 +11,5 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     lu = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.sender} → {self.receiver} : {self.contenu[:30]}"

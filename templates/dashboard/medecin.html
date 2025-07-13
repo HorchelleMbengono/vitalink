@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static%}
 {% block title %}Tableau de bord Médecin{% endblock %}
 
 {% block content %}
@@ -66,7 +67,7 @@
           <li class="list-group-item">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <strong>Médecin :</strong> Dr. {{ rdv.médecin.get_full_name|default:rdv.médecin.username }}<br>
+                <strong>Médecin :</strong> Dr. {{ rdv.medecin.get_full_name|default:rdv.medecin.username }}<br>
                 <small><strong>Date :</strong> {{ rdv.date|date:"d/m/Y H:i" }}</small>
               </div>
               <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-primary btn-sm">Rejoindre</a>

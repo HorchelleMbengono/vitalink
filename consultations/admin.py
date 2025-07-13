@@ -3,8 +3,8 @@ from .models import RendezVous, Ordonnance
 
 @admin.register(RendezVous)
 class RendezVousAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'médecin', 'date', 'room_name')
-    search_fields = ('patient__username', 'médecin__username')
+    list_display = ('patient', 'medecin', 'date', 'room_name')
+    search_fields = ('patient__username', 'medecin__username')
     list_filter = ('date',)
 
 @admin.register(Ordonnance)

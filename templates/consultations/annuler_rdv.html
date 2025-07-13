@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Annuler le rendez-vous{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+  <h2>Confirmer l'annulation</h2>
+  <p>Voulez-vous vraiment annuler ce rendez-vous avec Dr. {{ rdv.medecin.get_full_name }} le {{ rdv.date|date:"d/m/Y H:i" }} ?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Oui, annuler</button>
+    <a href="{% url 'dashboard_patient' %}" class="btn btn-secondary">Non, revenir</a>
+  </form>
+</div>
+{% endblock %}

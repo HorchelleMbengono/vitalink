@@ -4,7 +4,7 @@ from .models import CustomUser, PatientProfile, DoctorProfile
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ('username', 'email', 'role', 'is_staff')
+    list_display = ('username', 'email', 'role', 'is_staff',)
     fieldsets = UserAdmin.fieldsets + (
         ('Informations supplémentaires', {'fields': ('role',)}),
     )

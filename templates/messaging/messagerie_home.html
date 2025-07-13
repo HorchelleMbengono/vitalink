@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}Messagerie{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ===== Layout principal ===== */
+.messaging-container {
+  display: flex;
+  height: 85vh;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #f0f0f0;
+}
+
+/* ===== Liste des conversations ===== */
+.chat-list {
+  width: 35%;
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid #ccc;
+  padding: 15px;
+}
+
+.chat-list h5 {
+  margin-bottom: 15px;
+}
+
+.chat-list .contact {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  position: relative;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.chat-list .contact:hover {
+  background: #f1f1f1;
+}
+
+.chat-list .chat-preview {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: calc(100% - 30px);
+}
+
+.chat-list .badge {
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  background: #25D366;
+  color: white;
+  font-size: 0.7rem;
+  padding: 3px 6px;
+  border-radius: 10px;
+}
+
+/* ===== Zone de chat ===== */
+.chat-area {
+  width: 65%;
+  display: flex;
+  flex-direction: column;
+  background: #e5ddd5;
+  padding: 15px;
+}
+
+.chat-header {
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.message {
+  max-width: 75%;
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 18px;
+  position: relative;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  clear: both;
+  word-wrap: break-word;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.message.sent {
+  background: #dcf8c6;
+  float: right;
+  border-bottom-right-radius: 0;
+}
+
+.message.received {
+  background: #fff;
+  float: left;
+  border-bottom-left-radius: 0;
+  border: 1px solid #ddd;
+}
+
+.message small {
+  display: block;
+  font-size: 0.72rem;
+  text-align: right;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* ===== Icônes de lecture type WhatsApp ===== */
+.svg-check {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+.check-read {
+  fill: #34b7f1;
+}
+
+.check-sent {
+  fill: #999;
+}
+
+textarea {
+  resize: none;
+}
+
+/* ===== Formulaire message ===== */
+.input-group {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .messaging-container {
+    flex-direction: column;
+  }
+
+  .chat-list {
+    width: 100%;
+    display: {% if selected_interlocuteur %}none{% else %}block{% endif %};
+  }
+
+  .chat-area {
+    width: 100%;
+    display: {% if selected_interlocuteur %}flex{% else %}none{% endif %};
+  }
+
+  .btn-back {
+    display: block;
+    margin-bottom: 10px;
+    background: none;
+    border: none;
+    color: #007bff;
+    font-weight: bold;
+  }
+}
+
+.btn-back {
+  display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="messaging-container">
+  <!-- Liste des conversations -->
+  <div class="chat-list">
+    <h5>Conversations</h5>
+    {% for inter in interlocuteurs %}
+      <a href="{% url 'messagerie_home' interlocuteur_id=inter.id %}">
+        <div class="contact">
+          <strong>{{ inter.get_full_name|default:inter.username }}</strong>
+          <span class="chat-preview">
+            {{ dernier_message_contenu|dict_get:inter.id|default:"(aucun message)" }}
+          </span>
+          {% if not dernier_message_lu|dict_get:inter.id %}
+            <span class="badge">1</span>
+          {% endif %}
+        </div>
+      </a>
+    {% empty %}
+      <p>Pas de conversations.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Zone de discussion -->
+  <div class="chat-area">
+    {% if selected_interlocuteur %}
+      <form method="get" action="{% url 'messagerie_home' %}">
+        <button type="submit" class="btn-back">← Retour</button>
+      </form>
+
+      <div class="chat-header">
+        Conversation avec {{ selected_interlocuteur.get_full_name|default:selected_interlocuteur.username }}
+      </div>
+
+      <div class="chat-container">
+        {% for msg in conversation %}
+          <div class="message {% if msg.sender == user %}sent{% else %}received{% endif %}">
+            {{ msg.contenu|linebreaksbr }}
+            <small>
+              {{ msg.timestamp|date:"d/m/Y H:i" }}
+              {% if msg.sender == user %}
+                {% if msg.lu %}
+                  <!-- ✅✅ double check bleue -->
+                  <svg class="svg-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <path class="check-read" d="M15.854 3.146a.5.5 0 0 0-.708 0L8.5 9.793 6.354 7.646a.5.5 0 1 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l7-7a.5.5 0 0 0 0-.708z"/>
+                    <path class="check-read" d="M10.854 3.146a.5.5 0 0 0-.708 0L3.5 9.793 1.354 7.646a.5.5 0 1 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l7-7a.5.5 0 0 0 0-.708z"/>
+                  </svg>
+                {% else %}
+                  <!-- ✅ simple check grise -->
+                  <svg class="svg-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <path class="check-sent" d="M10.854 3.146a.5.5 0 0 0-.708 0L3.5 9.793 1.354 7.646a.5.5 0 1 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l7-7a.5.5 0 0 0 0-.708z"/>
+                  </svg>
+                {% endif %}
+              {% endif %}
+            </small>
+          </div>
+        {% empty %}
+          <p>Aucun message.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Formulaire envoi -->
+      <form method="post">
+        {% csrf_token %}
+        <div class="input-group">
+          <textarea name="contenu" class="form-control" rows="2" placeholder="Écrire un message..." required></textarea>
+          <button class="btn btn-primary" type="submit">Envoyer</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

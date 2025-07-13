@@ -7,10 +7,8 @@
 
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         body {
@@ -46,11 +44,28 @@
             padding: 1rem;
             text-align: center;
         }
+
+        .badge-notif {
+            background-color: red;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 50%;
+            vertical-align: top;
+            margin-left: 4px;
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
+
+    {% if show_profil_notification %}
+        <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+            <strong>⚠️ Profil incomplet :</strong> Merci de <a href="{% url profil_url %}">compléter votre profil</a> pour accéder pleinement à toutes les fonctionnalités.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+    {% endif %}
 
     <nav class="navbar navbar-expand-lg">
         <div class="container">
@@ -58,20 +73,43 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             {% if user.is_authenticated %}
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard_redirect' %}">
-                            <i class="bi bi-house-door-fill me-1"></i>Mon Dashboard</a>
+                            <i class="bi bi-house-door-fill me-1"></i>Dashboard
+                        </a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">
-                            <i class="bi bi-box-arrow-right me-1"></i>Déconnexion</a>
+                        <a class="nav-link" href="{% url 'notifications' %}">
+                            <i class="bi bi-bell-fill me-1"></i>Notifications
+                            {% if nb_notifications_non_lues > 0 %}
+                                <span class="badge-notif">{{ nb_notifications_non_lues }}</span>
+                            {% endif %}
+                        </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'messagerie_home' %}">
+                            <i class="bi bi-chat-dots"></i> Messagerie
+                            {% if nb_messages_non_lus > 0 %}
+                            <span class="badge bg-danger">{{ nb_messages_non_lus }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'account' %}">
-                            <i class="bi bi-person-circle"></i> Mon compte
+                            <i class="bi bi-person-circle me-1"></i>Mon compte
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
                         </a>
                     </li>
                 </ul>
@@ -81,11 +119,13 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'login' %}">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Connexion</a>
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Connexion
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'register' %}">
-                            <i class="bi bi-person-plus-fill me-1"></i>Inscription</a>
+                            <i class="bi bi-person-plus-fill me-1"></i>Inscription
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -102,6 +142,10 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="mt-auto">
+        &copy; {{ now|date:"Y" }} VitaLink - Tous droits réservés.
+    </footer>
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

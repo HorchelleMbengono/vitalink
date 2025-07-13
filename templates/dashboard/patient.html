@@ -7,9 +7,13 @@
 <ul class="list-group">
   {% for rdv in rdvs %}
     <li class="list-group-item">
-      <strong>Avec : </strong> Dr. {{ rdv.médecin.get_full_name }} <br>
-      <strong>Date : </strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
-      <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success mt-2">Rejoindre la téléconsultation</a>
+      <strong>Avec :</strong> Dr. {{ rdv.medecin.get_full_name }}<br>
+      <strong>Date :</strong> {{ rdv.date|date:"d/m/Y H:i" }}<br>
+      <div class="mt-2">
+        <a href="{% url 'teleconsultation' rdv.room_name %}" class="btn btn-success btn-sm">Rejoindre</a>
+        <a href="{% url 'modifier_rendezvous' rdv.pk %}" class="btn btn-warning btn-sm">Modifier</a>
+        <a href="{% url 'annuler_rendezvous' rdv.pk %}" class="btn btn-danger btn-sm">Annuler</a>
+      </div>
     </li>
   {% empty %}
     <li class="list-group-item">Aucun rendez-vous prévu.</li>

@@ -12,6 +12,7 @@ class CustomUser(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='patient')
     telephone = models.CharField(max_length=22, default='')
+    date_created = models.DateTimeField(auto_now_add=True)  # <- Ajout
 
 
 class PatientProfile(models.Model):

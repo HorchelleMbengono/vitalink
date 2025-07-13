@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Mes notifications{% endblock %}
+
+{% block content %}
+<h2>Mes notifications</h2>
+<ul class="list-group">
+    {% for notif in notifications %}
+        <li class="list-group-item {% if not notif.lu %}fw-bold{% endif %}">
+            {{ notif.message }} <br>
+            <small class="text-muted">{{ notif.date|date:"d/m/Y H:i" }}</small>
+        </li>
+    {% empty %}
+        <li class="list-group-item">Aucune notification.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

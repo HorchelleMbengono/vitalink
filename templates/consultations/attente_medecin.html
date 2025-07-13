@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}En attente du médecin{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+  <h3>🕒 En attente du médecin</h3>
+  <p>La téléconsultation n’est pas encore ouverte. Vous serez redirigé automatiquement dès que le médecin entre dans la salle.</p>
+  <div class="spinner-border text-primary mt-4" role="status"></div>
+</div>
+
+<script>
+  const roomName = "{{ room_name }}";
+  function verifierOuverture() {
+    fetch(`/verifier-salle/${roomName}/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.salle_ouverte) {
+          window.location.href = `/teleconsultation/${roomName}/`;
+        }
+      });
+  }
+
+  setInterval(verifierOuverture, 5000); // toutes les 5 secondes
+</script>
+{% endblock %}

@@ -11,18 +11,17 @@ def generate_room_name():
 
 class RendezVous(models.Model):
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rdv_patient')
-    médecin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rdv_medecin')
+    medecin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rdv_medecin')
     date = models.DateTimeField()
     room_name = models.CharField(max_length=100, unique=True, default=generate_room_name)
+    salle_ouverte = models.BooleanField(default=False)  # <- Ajout
 
     def jitsi_url(self):
         return f"https://meet.jit.si/{self.room_name}"
 
     def __str__(self):
-        return f"{self.patient.username} avec {self.médecin.username} le {self.date}"
+        return f"{self.patient.username} avec {self.medecin.username} le {self.date}"
 
-from django.db import models
-from django.conf import settings
 
 class Ordonnance(models.Model):
     patient = models.ForeignKey(
@@ -46,6 +45,13 @@ class Ordonnance(models.Model):
     def __str__(self):
         return f"Ordonnance du {self.date} pour {self.patient.get_full_name()}"
 
+
+# models.py
+class Notification(models.Model):
+    destinataire = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+    lu = models.BooleanField(default=False)
 
 
 
