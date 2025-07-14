@@ -82,12 +82,17 @@ def voir_dossier(request, patient_id):
     else:
         return HttpResponseForbidden("Accès interdit.")
     
+    
     # Liste des ordonnances du patient
     ordonnances = Ordonnance.objects.filter(patient=dossier.patient).order_by('-date')
 
     # Gestion du formulaire d'ajout ou modification d'ordonnance
     # On gère ici l'ajout uniquement (modification dans modal via JS)
     if request.method == 'POST' and 'ajouter_ordonnance' in request.POST:
+
+        if request.user.role != 'medecin':
+            return HttpResponseForbidden("Accès interdit. Réservé aux médecins.")
+    
         form = OrdonnanceForm(request.POST, request.FILES)
         if form.is_valid():
             ordonnance = form.save(commit=False)

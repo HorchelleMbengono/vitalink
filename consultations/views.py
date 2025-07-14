@@ -9,9 +9,11 @@ from accounts.models import CustomUser, DossierMedical
 from weasyprint import HTML
 from django.template.loader import render_to_string
 
+from consultations.ia_utils import classer_creneaux_disponibles
 from messaging.models import Message
 from .forms import RendezVousForm
 from .models import Notification, Ordonnance, RendezVous
+from django.db.models import Q
 
 
 @login_required
@@ -67,30 +69,51 @@ def verifier_ouverture_salle(request, room_name):
 
 @login_required
 def prendre_rendezvous(request):
-    if request.method == 'POST':
-        form = RendezVousForm(request.POST)
-        if form.is_valid():
-            rdv = form.save(commit=False)
-            rdv.patient = request.user
-            rdv.room_name = str(uuid.uuid4())
-            rdv.save()
-            Notification.objects.create(
-                destinataire=rdv.medecin,
-                message=f"{request.user.get_full_name()} a pris un rendez-vous pour le {rdv.date.strftime('%d/%m/%Y à %H:%M')}."
-            )
+    suggestions = []
+    initial = {}
+
+    # Si un médecin est sélectionné dans l'URL (GET), on le garde dans le formulaire
+    medecin_id = request.GET.get("medecin")
+    if medecin_id:
+        initial["medecin"] = medecin_id
+
+    form = RendezVousForm(request.POST or None, initial=initial)
+
+    if request.method == "POST" and form.is_valid():
+        form.instance.patient = request.user
+        rdv = form.save()
+
+        # Vérifie s'il y a déjà un message entre eux (donc une "conversation")
+        existe = Message.objects.filter(
+            Q(sender=request.user, receiver=rdv.medecin) |
+            Q(sender=rdv.medecin, receiver=request.user)
+        ).exists()
+
+        # Si aucune conversation n’existe encore, en créer une par un message neutre
+        if not existe:
             Message.objects.create(
                 sender=request.user,
                 receiver=rdv.medecin,
-                contenu="Conversation initiée automatiquement suite à la prise de rendez-vous."
+                contenu="Bonjour, ce message a été généré automatiquement lors de la prise de rendez-vous."
             )
 
-            return redirect('dashboard_patient')
-    else:
-        form = RendezVousForm()
-    return render(request, 'consultations/prise_rdv.html', {'form': form})
+        return redirect("dashboard_redirect")
 
+    # Suggestions IA selon le médecin sélectionné
+    if medecin_id:
+        medecin = CustomUser.objects.filter(id=medecin_id, role="medecin").first()
+        if medecin:
+            historique = RendezVous.objects.filter(patient=request.user)
+            suggestions = classer_creneaux_disponibles(
+                patient=request.user,
+                medecin=medecin,
+                historique=historique
+            )
 
-from django.shortcuts import get_object_or_404
+    return render(request, "consultations/prise_rdv.html", {
+        "form": form,
+        "suggestions": suggestions,
+    })
 
 @login_required
 def modifier_rendezvous(request, pk):
@@ -174,9 +197,6 @@ def export_ordonnance_pdf(request, ordonnance_id):
     return response
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Notification
 
 @login_required
 def notifications_view(request):

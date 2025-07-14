@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load form_tags %}  {# utile si tu veux utiliser add_class pour les champs #}
+{% load form_tags %}
 
 {% block title %}Prise de rendez-vous{% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 600px;">
+<div class="container mt-5" style="max-width: 650px;">
     <h2 class="mb-4">Planifier un rendez-vous</h2>
 
-    <form method="post" novalidate>
+    <form method="post" id="rdv-form" novalidate>
         {% csrf_token %}
         {% for field in form %}
             <div class="mb-3">
@@ -34,5 +34,46 @@
 
         <button type="submit" class="btn btn-primary">Valider</button>
     </form>
+
+    <hr class="my-4">
+
+    <div id="suggestions">
+        {% if suggestions %}
+            <h5>Suggestions de créneaux :</h5>
+            <ul class="list-group">
+                {% for creneau in suggestions %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ creneau|date:"l d F Y à H:i" }}
+                        <button class="btn btn-outline-success btn-sm"
+                                onclick="choisirCreneau('{{ creneau|date:"Y-m-d\\TH:i" }}')">
+                            Choisir ce créneau
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">Aucun créneau recommandé pour l’instant.</p>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+    // Quand le médecin change, on recharge la page avec son ID en paramètre GET
+    document.getElementById("id_medecin").addEventListener("change", function () {
+        const medecinId = this.value;
+        if (medecinId) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("medecin", medecinId);
+            window.location.href = url;
+        }
+    });
+
+    // Remplit automatiquement le champ date avec le créneau choisi
+    function choisirCreneau(datetimeStr) {
+        const dateField = document.getElementById("id_date");
+        dateField.value = datetimeStr;
+        dateField.scrollIntoView({ behavior: 'smooth' });
+        dateField.classList.add("border", "border-success");
+    }
+</script>
 {% endblock %}

@@ -60,13 +60,6 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    {% if show_profil_notification %}
-        <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-            <strong>⚠️ Profil incomplet :</strong> Merci de <a href="{% url profil_url %}">compléter votre profil</a> pour accéder pleinement à toutes les fonctionnalités.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-        </div>
-    {% endif %}
-
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{% url 'dashboard_redirect' %}">VitaLink</a>
